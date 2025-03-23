@@ -14,7 +14,7 @@ services:
   mysql-container:
     image: mysql:latest
     volumes:
-      - F:\mysql-data:/var/lib/mysql
+      - /mnt/mysql-data:/var/lib/mysql:rw
     environment:
       - MYSQL_DATABASE=meeting_room_booking_system
       - MYSQL_ROOT_PASSWORD=123456
@@ -23,7 +23,7 @@ services:
   redis-container:
     image: bitnami/redis:latest
     volumes:
-      - F:\redis-data:/bitnami/redis/data
+      - /mnt/redis-data:/bitnami/redis/data:rw
     environment:
       - REDIS_PASSWORD=123456
     networks:
