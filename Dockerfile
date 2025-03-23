@@ -1,4 +1,4 @@
-FROM node:latest as build-stage
+FROM docker.1ms.run/library/node as build-stage
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY . .
 
 RUN npm run build
 
-FROM node:latest as production-stage
+FROM docker.1ms.run/library/node as production-stage
 
 COPY --from=build-stage /app/dist /app
 COPY --from=build-stage /app/package.json /app/package.json
