@@ -90,7 +90,7 @@ export class MeetingRoomService {
    
         const [rooms, count] = await this.meetingRommRepository.findAndCount({
             where: condition,
-            select: ['name', 'description', 'equipment', 'id', 'capacity', 'isBooked', 'location', 'createTime'],
+            select: ['name', 'description', 'equipment', 'id', 'capacity', 'is_booked', 'location', 'create_time'],
         })
         return { rooms, count }
     }
@@ -104,7 +104,7 @@ export class MeetingRoomService {
         const [rooms, count] = await this.meetingRommRepository.findAndCount({
             skip: skipCount,
             take: pageSize,
-            select: ['name', 'description', 'equipment', 'id', 'capacity', 'isBooked', 'location', 'createTime'],
+            select: ['name', 'description', 'equipment', 'id', 'capacity', 'is_booked', 'location', 'create_time'],
         })
         return { rooms, count }
     }

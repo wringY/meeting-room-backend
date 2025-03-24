@@ -7,9 +7,9 @@ export class CreateBookingDto {
 
     @IsNotEmpty({ message: '开始时间不能为空' })
     @IsNumber()
-    startTime: number
+    start_time: number
     
     @IsNotEmpty({ message: '开始时间不能为空' })
     @IsNumber()
-    endTime: number
+    end_time: number
 }   

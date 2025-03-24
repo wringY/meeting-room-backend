@@ -21,11 +21,11 @@ export class MeetingRoomVo {
     description: string;
 
     @ApiProperty()
-    isBooked: boolean;
+    is_booked: boolean;
 
     @ApiProperty()
-    createTime: Date;
+    create_time: Date;
 
     @ApiProperty()
-    updateTime: Date;
+    update_time: Date;
 }

@@ -8,13 +8,13 @@ export class StatisticController {
     private statisticService: StatisticService;
 
     @Get('userBookingCount')
-    async userBookignCount(@Query('startTime') startTime: string, @Query('endTime') endTime) {
-        return this.statisticService.useBookingCount(startTime, endTime);
+    async userBookignCount(@Query('start_time') start_time: string, @Query('end_time') end_time) {
+        return this.statisticService.useBookingCount(start_time, end_time);
     }
 
     @Get('meetingRoomUsedCount')
-async meetingRoomUsedCount(@Query('startTime') startTime: string, @Query('endTime') endTime) {
-    return this.statisticService.meetingRoomUsedCount(startTime, endTime);
+async meetingRoomUsedCount(@Query('start_time') start_time: string, @Query('end_time') end_time) {
+    return this.statisticService.meetingRoomUsedCount(start_time, end_time);
 }
 
 }

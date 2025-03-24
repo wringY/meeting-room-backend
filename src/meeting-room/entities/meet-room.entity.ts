@@ -45,11 +45,11 @@ export class MeetingRoom {
         comment: '是否被预约',
         default: false
     })
-    isBooked: boolean
+    is_booked: boolean
 
     @CreateDateColumn()
-    createTime: Date
+    create_time: Date
 
     @UpdateDateColumn()
-    updateTime: Date
+    update_time: Date
 }

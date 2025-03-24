@@ -54,7 +54,7 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: {
         username: loginUser.username,
-        loginType: LoginType.USERNAME_PASSWORD,
+        login_type: LoginType.USERNAME_PASSWORD,
         isAdmin
       },
       relations: ['roles', 'roles.permission']
@@ -126,7 +126,7 @@ export class UserService {
     vo.phoneNumber = user.phone_number
     vo.isFrozen = user.isAdmin
     vo.isAdmin = user.isFrozen
-    vo.createTime= user.createTime
+    vo.create_time= user.create_time
 
     return vo
   }
@@ -264,7 +264,7 @@ export class UserService {
       skip: skipCount,
       take: pageSize,
       where: condition,
-      select: ['id', 'username', 'email', 'phone_number', 'isFrozen', 'head_pic', 'createTime']
+      select: ['id', 'username', 'email', 'phone_number', 'isFrozen', 'head_pic', 'create_time']
     })
     const vo = new UserListVo()
     vo.list = users as unknown as UserInfoVo[]
@@ -294,7 +294,7 @@ export class UserService {
     user.head_pic = headPic
     user.password = ''
     user.username = email.slice(0, email.indexOf('@')) + Math.random().toString().slice(2, 10)
-    user.loginType = LoginType.GOOGLE
+    user.login_type = LoginType.GOOGLE
 
     return this.userRepository.save(user)
   }

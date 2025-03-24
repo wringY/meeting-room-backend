@@ -76,13 +76,13 @@ export class User {
         name: 'create_time'
 
     })
-    createTime: Date
+    create_time: Date
 
     @UpdateDateColumn({
         comment: '更新时间',
         name: 'update_time'
     })
-    updateTime: Date
+    update_time: Date
 
     @JoinTable({
         name: 'user_role' // 多对多的中间表，存储外键
@@ -94,7 +94,7 @@ export class User {
         type: 'enum',
         enum: LoginType,
         comment: '登录类型',
-        default: LoginType.USERNAME_PASSWORD
+        default: LoginType.USERNAME_PASSWORD,
     })
-    loginType: LoginType
+    login_type: LoginType
 }

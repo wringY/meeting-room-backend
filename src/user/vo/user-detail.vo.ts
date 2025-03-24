@@ -36,7 +36,7 @@ export class UserInfoVo {
     isAdmin: boolean;
 
     @ApiProperty()
-    createTime: Date;
+    create_time: Date;
 }
 
 // 用户信息 包含角色和权限

@@ -59,7 +59,7 @@ export class BookingService {
       if (!bookingTimeRangeEnd) {
         bookingTimeRangeEnd = bookingTimeRangeStart + 60 * 60 * 1000
       }
-      condition.startTime = Between(new Date(bookingTimeRangeStart), new Date(bookingTimeRangeEnd))
+      condition.start_time = Between(new Date(bookingTimeRangeStart), new Date(bookingTimeRangeEnd))
     }
 
 
@@ -103,8 +103,8 @@ export class BookingService {
     const booking1 = new Booking()
     booking1.room = room1!
     booking1.user = user1!
-    booking1.startTime = new Date();
-    booking1.endTime = new Date(Date.now() + 1000 * 60 * 60);
+    booking1.start_time = new Date();
+    booking1.end_time = new Date(Date.now() + 1000 * 60 * 60);
 
     await this.repository.save(booking1)
 
@@ -112,23 +112,23 @@ export class BookingService {
     const booking2 = new Booking();
     booking2.room = room2!;
     booking2.user = user2!;
-    booking2.startTime = new Date();
-    booking2.endTime = new Date(Date.now() + 1000 * 60 * 60);
+    booking2.start_time = new Date();
+    booking2.end_time = new Date(Date.now() + 1000 * 60 * 60);
     await this.entityManager.save(Booking, booking2);
 
     const booking3 = new Booking();
     booking3.room = room1!;
     booking3.user = user2!;
-    booking3.startTime = new Date();
-    booking3.endTime = new Date(Date.now() + 1000 * 60 * 60);
+    booking3.start_time = new Date();
+    booking3.end_time = new Date(Date.now() + 1000 * 60 * 60);
     await this.entityManager.save(Booking, booking3);
 
 
     const booking4 = new Booking();
     booking4.room = room2!;
     booking4.user = user1!;
-    booking4.startTime = new Date();
-    booking4.endTime = new Date(Date.now() + 1000 * 60 * 60);
+    booking4.start_time = new Date();
+    booking4.end_time = new Date(Date.now() + 1000 * 60 * 60);
 
     await this.entityManager.save(Booking, booking4);
 
@@ -152,8 +152,8 @@ export class BookingService {
     newBooking.room = room;
     newBooking.user = user!;
     
-    newBooking.startTime = new Date(booking.startTime);
-    newBooking.endTime = new Date(booking.endTime);
+    newBooking.start_time = new Date(booking.start_time);
+    newBooking.end_time = new Date(booking.end_time);
 
     
 
@@ -161,8 +161,8 @@ export class BookingService {
       room: {
         id: room.id
       },
-      startTime: LessThanOrEqual(newBooking.startTime),
-      endTime: MoreThanOrEqual(newBooking.endTime)
+      start_time: LessThanOrEqual(newBooking.start_time),
+      end_time: MoreThanOrEqual(newBooking.end_time)
     })
 
     if (hasBooked) {

@@ -20,13 +20,13 @@ export class Booking {
         comment: '开始时间',
         nullable: false
     })
-    startTime: Date
+    start_time: Date
 
     @Column({
         comment: '结束时间',
         nullable: false
     })
-    endTime: Date
+    end_time: Date
 
     @Column({
         type: 'enum',
@@ -46,12 +46,12 @@ export class Booking {
    @CreateDateColumn({
     comment: '创建时间'
    })
-    createTime: Date
+    create_time: Date
 
     @UpdateDateColumn({
         comment: '更新时间'
     })
-    updateTime: Date
+    update_time: Date
 
     @ManyToOne(() => User)
     user: User
