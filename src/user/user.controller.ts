@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Inject, UnauthorizedException, ParseIntPipe, BadRequestException, DefaultValuePipe, HttpStatus, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Inject, UnauthorizedException, ParseIntPipe, BadRequestException, DefaultValuePipe, HttpStatus, UseInterceptors, UploadedFile, UseGuards, Req, Res } from '@nestjs/common';
 import { CaptchaType, UserService } from './user.service';
 import { RegisterUserDto } from './dto/register-user.dto'
 import { RedisService } from 'src/redis/redis.service';
@@ -13,26 +13,21 @@ import { generateParseIntPipe } from 'src/utils';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LoginUserVo } from './vo/login-user.vo';
 import { RefeshTokenVo } from './vo/refresh-token.vo';
-import { UserDetailVo } from './vo/user-detail.vo';
+import { UserDetailInfo, createUserDetailInfo } from './vo/user-detail.vo';
 import { UserListVo } from './vo/user-list.vo';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as path from 'path'
 import { storage } from 'src/my-file-storage';
+import { AuthGuard } from '@nestjs/passport';
+import { Response } from 'express';
+
 
 @ApiTags('用户管理模块')
 @Controller('user')
 export class UserController {
-  @Inject(RedisService)
-  private readonly redisService: RedisService;
-
-  @Inject(EmailService)
-  private readonly emailService: EmailService;
 
   @Inject(JwtService)
   private readonly jwtService: JwtService;
-
-  @Inject(ConfigService)
-  private readonly configService: ConfigService;
 
   constructor(private readonly userService: UserService) { }
 
@@ -95,9 +90,14 @@ export class UserController {
     description: '用户信息和 token',
     type: LoginUserVo
   })
+  @UseGuards(AuthGuard('local'))
   @Post('login')
-  async login(@Body() loginUser: LoginUserDto) {
-    const vo = await this.userService.login(loginUser, false)
+  async login(@UserInfo() vo: LoginUserVo) {
+    const { access_token, refresh_token } = this.userService.jwtSign(vo.userInfo)
+
+    vo.access_token = access_token
+
+    vo.refresh_token = refresh_token
     return vo
   }
 
@@ -123,7 +123,7 @@ export class UserController {
     return vo
   }
 
-  
+
   @ApiOperation({
     summary: '普通用户 access token失效，刷新token'
   })
@@ -150,24 +150,9 @@ export class UserController {
     try {
       const data = this.jwtService.verify(refreshToken)
 
-      const user = await this.userService.findUserById(data.userId, false)
+      const user = await this.userService.findUserDetailById(data.userId, false)
 
-      const access_token = this.jwtService.sign({
-        userId: user.id,
-        username: user.username,
-        roles: user.roles,
-        permissions: user.permissions
-      }, {
-        expiresIn: this.configService.get('jwt_access_token_expires_time')
-
-      })
-
-      const refresh_token = this.jwtService.sign({
-        userId: user.id
-      }, {
-        expiresIn: this.configService.get('jwt_refresh_token_expires_time')
-
-      })
+      const { access_token, refresh_token } = this.userService.jwtSign(user)
 
       const vo = new RefeshTokenVo()
       vo.access_token = access_token
@@ -205,24 +190,9 @@ export class UserController {
     try {
       const data = this.jwtService.verify(refreshToken)
 
-      const user = await this.userService.findUserById(data.userId, true)
+      const user = await this.userService.findUserDetailById(data.userId, true)
 
-      const access_token = this.jwtService.sign({
-        userId: user.id,
-        username: user.username,
-        roles: user.roles,
-        permissions: user.permissions
-      }, {
-        expiresIn: this.configService.get('jwt_access_token_expires_time')
-
-      })
-
-      const refresh_token = this.jwtService.sign({
-        userId: user.id
-      }, {
-        expiresIn: this.configService.get('jwt_refresh_token_expires_time')
-
-      })
+      const { access_token, refresh_token } = this.userService.jwtSign(user)
 
       return {
         access_token,
@@ -293,7 +263,7 @@ export class UserController {
   async updatePassword(@Body() updatePassword: UpdatePassWordDto) {
     return await this.userService.updatePassword(updatePassword)
   }
-   
+
   @ApiOperation({
     summary: '获取更新密码验证码'
   })
@@ -301,7 +271,7 @@ export class UserController {
     name: 'address',
     type: String,
     description: '邮箱地址',
-    example : 'xxx@xx.com'
+    example: 'xxx@xx.com'
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -321,13 +291,13 @@ export class UserController {
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'success',
-    type: UserDetailVo
+    type: UserDetailInfo
   })
   @Get('info')
   @RequireLogin()
   @ApiBearerAuth()
   async info(@UserInfo('userId', ParseIntPipe) id: number) {
-    return await this.userService.findUserDetailById(id)
+    return await this.userService.findUserById(id)
   }
 
   @ApiOperation({
@@ -335,34 +305,34 @@ export class UserController {
   })
   @ApiBearerAuth()
   @ApiQuery({
-      name: 'pageNo',
-      description: '第几页',
-      type: Number
+    name: 'pageNo',
+    description: '第几页',
+    type: Number
   })
   @ApiQuery({
-      name: 'pageSize',
-      description: '每页多少条',
-      type: Number
+    name: 'pageSize',
+    description: '每页多少条',
+    type: Number
   })
   @ApiQuery({
-      name: 'username',
-      description: '用户名',
-      type: Number
+    name: 'username',
+    description: '用户名',
+    type: Number
   })
   @ApiQuery({
-      name: 'nickName',
-      description: '昵称',
-      type: Number
+    name: 'nickName',
+    description: '昵称',
+    type: Number
   })
   @ApiQuery({
-      name: 'email',
-      description: '邮箱地址',
-      type: Number
+    name: 'email',
+    description: '邮箱地址',
+    type: Number
   })
   @ApiResponse({
-      type: UserListVo,
-      description: '用户列表',
-      status: HttpStatus.OK
+    type: UserListVo,
+    description: '用户列表',
+    status: HttpStatus.OK
   })
   @RequireLogin()
   @ApiBearerAuth()
@@ -410,6 +380,17 @@ export class UserController {
     return 'done'
   }
 
+  @ApiOperation({
+    summary: '上传文件'
+  })
+  @ApiBody({
+    type: FileInterceptor('file')
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: '上传成功',
+    type: String
+  })
   @Post('upload')
   @UseInterceptors(FileInterceptor('file', {
     dest: 'uploads',
@@ -419,7 +400,7 @@ export class UserController {
     },
     fileFilter(req, file, callback) {
       const extname = path.extname(file.originalname)
-      if(['.png', '.jpg', '.gif'].includes(extname)) {
+      if (['.png', '.jpg', '.gif'].includes(extname)) {
         callback(null, true)
       } else {
         callback(new BadRequestException('只能上传图片'), false)
@@ -427,8 +408,37 @@ export class UserController {
     },
   }))
   uploadFile(@UploadedFile() file: Express.Multer.File) {
-    console.log('file', file)
     return file.path
+  }
+
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {
+
+  }
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req, @Res() res: Response) {
+    if (!req.user) {
+      throw new BadRequestException('google 登录失败')
+    }
+
+    const { email, picture, firstName, lastName } = req.user
+    let foundUser = await this.userService.findUserByEmail(email)
+
+    if (!foundUser) {
+      foundUser = await this.userService.registerByGoogleInfo(email, firstName + lastName, picture)
+    }
+
+    const userInfo = createUserDetailInfo(foundUser)
+    const { access_token, refresh_token } = this.userService.jwtSign(userInfo)
+
+    res.cookie('userInfo', JSON.stringify(userInfo));
+    res.cookie('accessToken', access_token);
+    res.cookie('refreshToken', refresh_token);
+    res.redirect('http://localhost:3000/')
   }
 
 

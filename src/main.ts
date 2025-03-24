@@ -7,6 +7,7 @@ import { UnloginFilter } from './filters/unlogin.filter';
 import { CustomExceptionFilter } from './filters/custom-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { NestExpressApplication } from '@nestjs/platform-express';
+import * as cookieParser from 'cookie-parser'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -19,6 +20,9 @@ async function bootstrap() {
     prefix: '/uploads'
   })
   
+  app.use(cookieParser())
+
+  app.enableCors()
 
   const config = new DocumentBuilder()
     .setTitle('会议室预订系统')

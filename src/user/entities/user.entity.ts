@@ -1,6 +1,12 @@
 import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Role } from "./role.entity";
 
+export enum LoginType {
+    USERNAME_PASSWORD = 0,
+    GOOGLE = 1,
+    GUTHUB = 2
+}
+
 @Entity({
     name: 'users'
 })
@@ -83,4 +89,12 @@ export class User {
     })
     @ManyToMany(() => Role, (user_role) => user_role.users) // 第二个参数是用来指定外键列, 通过usrer_role.users
     roles: Role[]
+
+    @Column({
+        type: 'enum',
+        enum: LoginType,
+        comment: '登录类型',
+        default: LoginType.USERNAME_PASSWORD
+    })
+    loginType: LoginType
 }

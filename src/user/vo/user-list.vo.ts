@@ -1,10 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger"
-import { User } from "../entities/user.entity"
+import { UserInfoVo } from './user-detail.vo'
 
 export class UserListVo {
     
     @ApiProperty()
-    list: User[]
+    list: UserInfoVo[]
 
     @ApiProperty()
     total: number

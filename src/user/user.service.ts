@@ -1,9 +1,8 @@
 import { BadRequestException, HttpException, HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
+import { LoginType, User } from './entities/user.entity';
 import { Like, Repository } from 'typeorm';
 import { RedisService } from 'src/redis/redis.service';
 import { md5 } from 'src/utils';
@@ -13,11 +12,11 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { LoginUserVo } from './vo/login-user.vo';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UserDetailVo } from './vo/user-detail.vo';
-import { UserInfo } from 'src/decorator/custom.decorator';
+import { UserDetailInfo, UserInfoVo, createUserDetailInfo } from './vo/user-detail.vo';
 import { UpdatePassWordDto } from './dto/update-password.dto';
 import { EmailService } from 'src/email/email.service';
 import { UserListVo } from './vo/user-list.vo';
+
 
 export enum CaptchaType {
   resisterUser = 'register_captcha_',
@@ -55,6 +54,7 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: {
         username: loginUser.username,
+        loginType: LoginType.USERNAME_PASSWORD,
         isAdmin
       },
       relations: ['roles', 'roles.permission']
@@ -68,43 +68,8 @@ export class UserService {
     }
 
     const vo = new LoginUserVo()
-    vo.userInfo = {
-      id: user.id,
-      username: user.username,
-      nickName: user.nickName,
-      email: user.email,
-      phoneNumber: user.phone_number,
-      headPic: user.head_pic,
-      roles: user.roles.map(role => role.name),
-      createTime: user.createTime.toString(),
-      isFrozen: user.isFrozen,
-      isAdmin: user.isAdmin,
-      permissions: user.roles.reduce((arr: any, item) => {
-        item.permission.forEach((permission) => {
-          if (arr.indexOf(permission) === -1) {
-            arr.push(permission);
-          }
-        })
-        return arr
-      }, [])
-    }
-
-    vo.accessToken = this.jwtService.sign({
-      userId: vo.userInfo.id,
-      username: vo.userInfo.username,
-      roles: vo.userInfo.roles,
-      email: vo.userInfo.email,
-      permissions: vo.userInfo.permissions
-    }, {
-      expiresIn: this.configService.get('jwt_access_token_expires_time')
-    })
-
-    vo.refreshToken = this.jwtService.sign({
-      userId: vo.userInfo.id
-    }, {
-      expiresIn: this.configService.get('jwt_refresh_token_expires_time')
-    })
-
+    const userInfoVo = createUserDetailInfo(user)
+    vo.userInfo = userInfoVo
     return vo
   }
 
@@ -144,7 +109,29 @@ export class UserService {
     }
   }
 
-  async findUserById(id: number, isAdmin: boolean) {
+
+  async findUserById(id: number) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id
+      },
+    }) as User
+
+    const vo = new UserInfoVo()
+    vo.id = user.id
+    vo.username = user.username
+    vo.nickName = user.nickName
+    vo.email = user.email
+    vo.headPic = user.head_pic
+    vo.phoneNumber = user.phone_number
+    vo.isFrozen = user.isAdmin
+    vo.isAdmin = user.isFrozen
+    vo.createTime= user.createTime
+
+    return vo
+  }
+
+  async findUserDetailById(id: number, isAdmin: boolean) {
     const user = await this.userRepository.findOne({
       where: {
         id,
@@ -153,37 +140,9 @@ export class UserService {
       relations: ['roles', 'roles.permission']
     }) as User
 
-    return {
-      id: user.id,
-      username: user.username,
-      isAdmin: user.isAdmin,
-      roles: user.roles.map(item => item.name),
-      permissions: user.roles.reduce((arr: any, item) => {
-        item.permission.forEach(permission => {
-          if (arr.indexOf(permission) === -1) {
-            arr.push(permission);
-          }
-        })
-        return arr;
-      }, [])
-    }
-  }
+    const userVO = createUserDetailInfo(user)
 
-  async findUserDetailById(id: number) {
-    const userDetail = await this.userRepository.findOneBy({
-      id
-    }) as User
-
-    const vo = new UserDetailVo()
-    vo.id = userDetail.id;
-    vo.email = userDetail.email;
-    vo.username = userDetail.username;
-    vo.headPic = userDetail.head_pic;
-    vo.phoneNumber = userDetail.phone_number;
-    vo.nickName = userDetail.nickName;
-    vo.createTime = userDetail.createTime;
-    vo.isFrozen = userDetail.isFrozen;
-    return vo
+    return userVO
   }
 
   async updatePassword(updatePassword: UpdatePassWordDto) {
@@ -241,6 +200,25 @@ export class UserService {
     }
   }
 
+  jwtSign(userInfo: UserDetailInfo) {
+    const access_token = this.jwtService.sign({
+      userId: userInfo.id,
+      username: userInfo.username,
+      email: userInfo.email,
+      roles: userInfo.roles,
+      permissions: userInfo.permissions
+    }, {
+      expiresIn: this.configService.get('jwt_access_token_expires_time')
+    })
+
+    const refresh_token = this.jwtService.sign({
+      userId: userInfo.id
+    }, {
+      expiresIn: this.configService.get('jwt_refresh_token_expres_time')
+
+    })
+    return { access_token, refresh_token }
+  }
 
   async sendCaptcha(email: string, type: CaptchaType) {
     const code = Math.random().toString().slice(2, 8);
@@ -289,11 +267,36 @@ export class UserService {
       select: ['id', 'username', 'email', 'phone_number', 'isFrozen', 'head_pic', 'createTime']
     })
     const vo = new UserListVo()
-    vo.list = users
+    vo.list = users as unknown as UserInfoVo[]
     vo.pageSize = count
     vo.pageSize = pageSize
     vo.pageNo = pageNo
     return vo
+  }
+
+  async findUserByEmail(email: string) {
+    const user = await this.userRepository.findOne({
+      where: {
+        email,
+        isAdmin: false
+      },
+      relations: ['roles', 'roles.permission']
+    })
+
+    return user
+  }
+
+
+  async registerByGoogleInfo(email: string, nickName: string, headPic: string) {
+    const user = new User()
+    user.email = email
+    user.nickName = nickName
+    user.head_pic = headPic
+    user.password = ''
+    user.username = email.slice(0, email.indexOf('@')) + Math.random().toString().slice(2, 10)
+    user.loginType = LoginType.GOOGLE
+
+    return this.userRepository.save(user)
   }
 
   async initData() {

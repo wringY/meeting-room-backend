@@ -125,7 +125,7 @@ export class MeetingRoomController {
   }
 
   @ApiOperation({
-    summary: '查询所有会议室',
+    summary: '获取会议室列表',
   })
   @ApiQuery({
     name: 'pageNo',

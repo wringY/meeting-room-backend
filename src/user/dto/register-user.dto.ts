@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger"
 import { IsEmail, IsNotEmpty, MinLength } from "class-validator"
 
-export class RegisterUserDto {
+export class RegisterUserDto   {
     @IsNotEmpty({
         message: '用户名不能为空'
     })
@@ -32,7 +32,7 @@ export class RegisterUserDto {
     email: string
 
     @IsNotEmpty({
-        message: '验证码不能为空'
+        message: '验证码不能为空1'
     })
     @ApiProperty()
     captcha: string // 验证码

@@ -1,6 +1,14 @@
 version: '3.8'
 services:
-  nest-app:
+  fe-app:
+    image: fe:first
+    ports:
+      -80: 80
+    depends_on:
+      - nest-app
+    networks:
+      - common-network
+  nest-server:
     build: 
       context: ./
       dockerfile: ./Dockerfile
@@ -8,24 +16,36 @@ services:
       - mysql-container
       - redis-container
     ports:
-      - 3305:3305
+      - ${nest_server_port}:3005
     networks:
       - common-network
   mysql-container:
     image: mysql:latest
     volumes:
-      - /mnt/mysql-data:/var/lib/mysql:rw
+      - ${mysql_volume_path}:/var/lib/mysql:rw
     environment:
-      - MYSQL_DATABASE=meeting_room_booking_system
-      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=${mysql_server_database}
+      - MYSQL_ROOT_PASSWORD=${mysql_server_password}
     networks:
       - common-network
   redis-container:
     image: bitnami/redis:latest
     volumes:
-      - /mnt/redis-data:/bitnami/redis/data:rw
+      - ${redis_volume_path}:/bitnami/redis/data:rw
     environment:
-      - REDIS_PASSWORD=123456
+      - REDIS_PASSWORD=${redis_server_password}
+    networks:
+      - common-network
+  minio-container:
+    image: bitnami/minio:latest
+    ports:
+      - 9000:9000
+      - 9001:9001
+    valumes:
+     - ${minio_volume_path}⁠:/bitnami/minio/data
+    environment:
+      - MINIO_ROOT_USER=${minio_root_user}
+      - MINIO_ROOT_PASSWORD=${minio_root_password}
     networks:
       - common-network
 networks:

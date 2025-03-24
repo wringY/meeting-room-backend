@@ -1,18 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty } from "class-validator";
+import { PickType } from "@nestjs/mapped-types";
+import { RegisterUserDto } from'./register-user.dto'
 
-export class LoginUserDto {
-    @IsNotEmpty({
-        message: '用户名不能为空'
-    })
-    @ApiProperty()
-    username: string;
+export class LoginUserDto extends PickType(RegisterUserDto, ['username', 'password']) {
 
-    @IsNotEmpty({
-        message: '密码不能为空'
-    })
-    @ApiProperty({
-        minLength: 6
-    })
-    password: string;
 }

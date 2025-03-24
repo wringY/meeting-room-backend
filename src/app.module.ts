@@ -18,6 +18,8 @@ import { MeetingRoom } from './meeting-room/entities/meet-room.entity';
 import { BookingModule } from './booking/booking.module';
 import { Booking } from './booking/entities/booking.entity';
 import { StatisticModule } from './statistic/statistic.module';
+import { MinioModule } from './minio/minio.module';
+import { AuthModule } from './auth/auth.module';
 import * as path from 'path'
 
 @Module({
@@ -34,7 +36,7 @@ import * as path from 'path'
     }),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: path.join(__dirname, '.env')
+      envFilePath: [path.join(__dirname, '../.dev.env'), path.join(__dirname, '../.env')]
     }),
     TypeOrmModule.forRootAsync({
       useFactory(configService: ConfigService) {
@@ -46,12 +48,12 @@ import * as path from 'path'
           password: configService.get('mysql_server_password'),
           database: configService.get('mysql_server_database'),
           entities: [User, Role, Permission, MeetingRoom, Booking],
-          synchronize: true,
+          synchronize: false,
           poolSize: 10,
           logging: true,
           connectorPackage: 'mysql2',
           extra: {
-            authPlugin: 'sha256_password'
+            // authPlugin: 'sha256_password'
           }
         }
       },
@@ -62,7 +64,10 @@ import * as path from 'path'
     EmailModule,
     MeetingRoomModule,
     BookingModule,
-    StatisticModule
+    StatisticModule,
+    MinioModule,
+    AuthModule,
+    JwtModule
   ],
   controllers: [AppController],
   providers: [AppService,
@@ -73,7 +78,7 @@ import * as path from 'path'
     {
       provide: APP_GUARD,
       useClass: LoginGuard
-    }, 
+    },
     {
       provide: APP_GUARD,
       useClass: PermissionGuard

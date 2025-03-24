@@ -1,5 +1,5 @@
-import { MeetingRoom } from "src/meeting-room/entities/meet-room.entity"
-import { User } from "src/user/entities/user.entity"
+import { MeetingRoom } from "../../meeting-room/entities/meet-room.entity"
+import { User } from "../../user/entities/user.entity"
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm"
 
 export enum BookingStatus {
