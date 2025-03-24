@@ -8,10 +8,11 @@ import { MeetingRoom } from './meeting-room/entities/meet-room.entity'
 import { Booking } from './booking/entities/booking.entity'
 
 config({
-    path: '../env-migration'
+    path: '.env-migration'
 })
 
-console.log(process.env)
+
+console.log(process.env.mysql_server_host, 'dsdsdsd')
 
 export default new DataSource({
     type: 'mysql',
